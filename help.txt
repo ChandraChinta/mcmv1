@@ -1,0 +1,154 @@
+1. Create an Azure Agentic AI service to process current cloud provider from the one out of three( Azure,AWS,GCP ) and service name. Then find best mapping services in remaining two clouds with cost 
+
+2. Create a Multicloud Mapper - Ui with drop down of to select cloud provider from the one out of three( Azure,AWS,GCP ), text box to capture cloud  service name. Search service button will trigger the Agent and show results in a tabular format 
+
+3. Add a new Azure Open AI based Agent to support an upload of Architecture diagram and Validate the Architecture diagram or not with gpt. If yes, Analyze the diagram  with gpt and generate a bill of materials list along with cost of each component in the architecture.
+
+4. Extend existing UI with one more new page for BOM generator. to Upload a diagram and calling newly created agent and show generated  bill of materials list along with cost of each component in the tabular format. 
+
+5. Update existing BOM Generator and Uploaded diagram is non-Azure, then generate additional bom in Azure with relevant services in Azure 
+
+6. Extend multicloud mapper page add drop down option others and identify what type of technology or a thirdparty product and identify any other cloud then suggest a mapping service on Azure show results in a tabular format.
+
+/******************************** Specification Driven Development ******************************************/
+
+Here are the converted prompts formatted for **Spec-Driven Development (SDD)**. Each prompt now includes clear objectives, functional requirements, technical constraints, and acceptance criteria to guide the development process.
+
+---
+
+### Prompt 2: Multicloud Mapper UI
+
+**Title:** Feature Specification: Multicloud Mapper Interface
+**Objective:** Develop a user interface that allows users to select a cloud provider and input a service name to retrieve mapping details via an Agent.
+
+**1. Functional Requirements:**
+*   **UI Component - Cloud Provider Selection:**
+    *   Must display a dropdown menu.
+    *   Dropdown options must strictly include: `Azure`, `AWS`, `GCP`.
+*   **UI Component - Service Input:**
+    *   Must provide a text input box to capture the cloud service name (e.g., "S3", "Blob Storage").
+*   **Action - Search:**
+    *   Must include a "Search Service" button.
+    *   Upon click, the button must trigger the backend Mapping Agent with the selected provider and service name.
+*   **Output - Results Display:**
+    *   Must display the Agent's response in a tabular format (Grid).
+    *   The table must include columns for: `Service Name`, `Category`, `Description`, and `Mapping Status`.
+
+**2. Technical Specifications:**
+*   **Frontend:** React/Angular/Vue (select based on stack).
+*   **State Management:** Handle loading states (spinner) while the Agent is processing.
+*   **Error Handling:** Display user-friendly error messages if the Agent returns no data or fails.
+
+**3. Acceptance Criteria:**
+*   **Given** the user selects "AWS" and types "Lambda", **When** they click "Search Service", **Then** the system triggers the Agent and displays the equivalent services in the results table.
+*   **Given** the user clicks search without entering a service name, **Then** the system displays a validation error "Service name is required."
+
+---
+
+### Prompt 3: Azure OpenAI Architecture Validation & BOM Agent
+
+**Title:** Backend Specification: Architecture Diagram Validation & BOM Agent
+**Objective:** Create an Azure OpenAI-based agent capable of validating uploaded architecture diagrams and generating a Bill of Materials (BOM) with cost estimates.
+
+**1. Functional Requirements:**
+*   **Input:** Accept image file uploads (PNG, JPG, JPEG) of architecture diagrams.
+*   **Step 1 - Validation Logic:**
+    *   The Agent must first analyze the image to determine if it is a valid technical architecture diagram.
+    *   **If Invalid:** Return a response indicating `isValid: false` and stop processing.
+    *   **If Valid:** Proceed to Step 2.
+*   **Step 2 - Analysis & BOM Generation:**
+    *   Identify all components within the diagram.
+    *   Generate a Bill of Materials (BOM) list.
+    *   Estimate the cost for each component (utilizing GPT knowledge or integrated pricing APIs).
+*   **Output Format:** Return a structured JSON object containing:
+    *   `isValid` (Boolean)
+    *   `bomList` (Array of Objects: `{ ComponentName, Type, EstimatedCost, Description }`).
+
+**2. Technical Specifications:**
+*   **AI Model:** Azure OpenAI GPT-4 (Vision capable model).
+*   **Prompt Engineering:** Implement system prompts to enforce strict JSON output structure.
+*   **Security:** Ensure API keys are stored in Key Vault/Environment Variables.
+
+**3. Acceptance Criteria:**
+*   **Given** a user uploads a photo of a landscape, **When** the Agent processes it, **Then** the Agent returns `isValid: false`.
+*   **Given** a user uploads a valid AWS architecture diagram, **When** the Agent processes it, **Then** the Agent returns `isValid: true` and a JSON list of components with estimated costs.
+
+---
+
+### Prompt 4: BOM Generator UI Page
+
+**Title:** Feature Specification: BOM Generator Frontend
+**Objective:** Extend the existing UI to include a new page for uploading architecture diagrams and displaying the generated Bill of Materials.
+
+**1. Functional Requirements:**
+*   **Navigation:** Add a new route/page labeled "BOM Generator" to the main navigation menu.
+*   **UI Component - Upload:**
+    *   Must include a file upload drag-and-drop zone or button.
+    *   Accepted file types: `.png, .jpg, .jpeg`.
+*   **Action - Process:**
+    *   Must include a "Generate BOM" button.
+    *   On click, the file must be sent to the Agent defined in Prompt 3.
+*   **Output - Results Display:**
+    *   Must display the generated BOM in a tabular format.
+    *   Columns required: `Component Name`, `Type`, `Description`, `Estimated Cost`.
+    *   Display a total sum of costs at the bottom of the table.
+
+**2. Technical Specifications:**
+*   **API Integration:** Consume the API endpoint created for the Architecture Agent.
+*   **State Handling:** Disable the "Generate BOM" button while the upload is processing.
+
+**3. Acceptance Criteria:**
+*   **Given** the user navigates to the BOM Generator page, **When** they upload a valid diagram and click "Generate BOM", **Then** the table populates with the component list and costs.
+*   **Given** the Agent returns `isValid: false`, **Then** the UI displays an alert: "The uploaded image is not a valid architecture diagram."
+
+---
+
+### Prompt 5: Cross-Cloud BOM Suggestion Logic
+
+**Title:** Feature Specification: Non-Azure to Azure BOM Mapping
+**Objective:** Enhance the BOM Generator logic to detect non-Azure technologies and automatically generate an equivalent Azure Bill of Materials.
+
+**1. Functional Requirements:**
+*   **Trigger:** This logic activates during the BOM generation process (Prompt 3/4).
+*   **Detection:** The Agent must identify if the uploaded diagram uses non-Azure services (e.g., AWS, GCP, On-premise).
+*   **Logic - Azure Mapping:**
+    *   If non-Azure services are detected, the Agent must map each service to its Azure equivalent (e.g., AWS S3 -> Azure Blob Storage).
+*   **Output Extension:**
+    *   The result JSON must include an additional field: `AzureEquivalentBOM`.
+    *   The UI Table (from Prompt 4) must render an additional column or a separate section labeled "Azure Equivalent Services".
+
+**2. Technical Specifications:**
+*   **Prompt Engineering:** Update the GPT system prompt to include instructions: *"If the detected services are not native to Azure, suggest the closest Azure equivalent for each item."*
+*   **UI Update:** The BOM table must conditionally render the "Azure Equivalent" column only if the original diagram was non-Azure.
+
+**3. Acceptance Criteria:**
+*   **Given** a user uploads an AWS architecture diagram, **When** BOM generation completes, **Then** the UI displays the original AWS components alongside a column suggesting the relevant Azure alternatives.
+*   **Given** a user uploads a native Azure architecture diagram, **When** BOM generation completes, **Then** the "Azure Equivalent" column is hidden or duplicates the original component.
+
+---
+
+### Prompt 6: Multicloud Mapper "Others" & Azure Suggestion
+
+**Title:** Feature Specification: Third-Party Technology Mapping
+**Objective:** Extend the Multicloud Mapper to handle generic technologies or third-party products and provide Azure mapping suggestions.
+
+**1. Functional Requirements:**
+*   **UI Update - Dropdown:**
+    *   Update the Cloud Provider dropdown to include an option: `Others`.
+*   **Input Logic:**
+    *   When `Others` is selected, the text box placeholder changes to "Enter Technology/Product Name" (e.g., "Kubernetes", "MongoDB").
+*   **Agent Logic:**
+    *   The Agent must identify the technology type.
+    *   The Agent must identify the current hosting cloud (if known) or treat it as agnostic.
+    *   **Action:** Generate a mapping to the most relevant Azure service (e.g., Kubernetes -> AKS, MongoDB -> CosmosDB).
+*   **Output Display:**
+    *   Results must be shown in the existing tabular format.
+    *   Table columns: `Input Technology`, `Identified Category`, `Suggested Azure Service`, `Description`.
+
+**2. Technical Specifications:**
+*   **Backend:** Reuse existing Mapper Agent infrastructure but branch logic based on `provider == "Others"`.
+*   **Response Model:** Ensure the JSON response model supports the new "Suggested Azure Service" field.
+
+**3. Acceptance Criteria:**
+*   **Given** the user selects "Others" and types "Kafka", **When** they click Search, **Then** the table displays a row mapping Kafka to "Azure Event Hubs" or "Confluent on Azure".
+*   **Given** the user selects "Others" and types a generic term like "Database", **Then** the Agent returns a list of relevant Azure database services (SQL Database, PostgreSQL, etc.).
